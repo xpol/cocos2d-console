@@ -78,7 +78,7 @@ class CCPluginHash(cocos.CCPlugin):
         self._src_dir_arr = self.normalize_path_in_list(options.src_dir_arr)
         self._verbose = options.verbose
         self._workingdir = workingdir
-        self._cpp_version = options.cpp_version
+        self._cpp_version = options.cpp_version or self.old['cpp_version']
         self._no_pack = options.no_pack
 
     def normalize_path_in_list(self, list):
@@ -107,15 +107,15 @@ class CCPluginHash(cocos.CCPlugin):
                 rel = os.path.relpath(file, src)
                 items[rel] = crc32(file)
 
-        newver = make_json(items, self._cpp_version, self.old['version'])
-        if is_same_version(self.old, newver):
-            return False# no need to update version file
+        self.new = make_json(items, self._cpp_version, self.old['version'])
 
-        self.new = newver
-        newver['version'] += 1
-        jsonfile = 'VERSION-%d.%d.json' % (newver['cpp_version'], newver['version'])
+        self.new['version'] += 1
+        jsonfile = 'VERSION-%d.%d.json' % (self.new['cpp_version'], self.new['version'])
         with open(jsonfile, 'w') as f:
-            json.dump(newver, f, sort_keys=True, indent=2)
+            json.dump(self.new, f, sort_keys=True, indent=2)
+
+        if is_same_version(self.old, self.new):
+            return False# no need to update version file
 
         if os.path.isdir('res/VERSION.json'):
             os.remove('res/VERSION.json')
@@ -174,7 +174,6 @@ class CCPluginHash(cocos.CCPlugin):
 
         if not self.hash_assets(files):
             cocos.Logging.info('nothing to update')
-            return
 
         if not self._no_pack:
             self.pack_assets(files)
@@ -193,7 +192,7 @@ class CCPluginHash(cocos.CCPlugin):
                             default=['src', 'res'], action="append",
                             help=MultiLanguage.get_string('LUACOMPILE_ARG_SRC'))
 
-        parser.add_argument("-c", "--cpp", dest="cpp_version", default=0,
+        parser.add_argument("-c", "--cpp", dest="cpp_version",
                             type=int, help='The cpp version')
 
         parser.add_argument("--no-pack", action="store_true", dest="no_pack",
