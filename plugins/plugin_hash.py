@@ -56,6 +56,11 @@ def replace_lua_with_luac(work_dir):
             if cur_ext == '.lua':
                 os.remove(full_path)
                 shutil.move(full_path+'c', full_path)
+def eusure_copy(src, dst):
+    if os.path.isdir(dst):
+        os.remove(dst)
+    shutil.copy(src, dst)
+
 
 class CCPluginHash(cocos.CCPlugin):
     """
@@ -109,17 +114,19 @@ class CCPluginHash(cocos.CCPlugin):
 
         self.new = make_json(items, self._cpp_version, self.old['version'])
 
-        self.new['version'] += 1
+        up_to_date = is_same_version(self.old, self.new)
+        if not up_to_date:
+            self.new['version'] += 1
         jsonfile = 'VERSION-%d.%d.json' % (self.new['cpp_version'], self.new['version'])
         with open(jsonfile, 'w') as f:
             json.dump(self.new, f, sort_keys=True, indent=2)
 
-        if is_same_version(self.old, self.new):
+        eusure_copy(jsonfile, 'LATEST.json')
+
+        if up_to_date:
             return False# no need to update version file
 
-        if os.path.isdir('res/VERSION.json'):
-            os.remove('res/VERSION.json')
-        shutil.copy(jsonfile, 'res/VERSION.json')
+        eusure_copy(jsonfile, 'res/VERSION.json')
         return True
 
     def encrypt(self, dir):
@@ -155,6 +162,8 @@ class CCPluginHash(cocos.CCPlugin):
         for f in copied:
             z.write(assetsdir+f, f, compress_type = zipfile.ZIP_DEFLATED)
         z.close()
+
+        eusure_copy(zipname, 'LATEST.zip')
 
         if os.path.isdir(assetsdir):
             shutil.rmtree(assetsdir)
