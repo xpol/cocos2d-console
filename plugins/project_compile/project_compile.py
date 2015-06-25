@@ -1280,7 +1280,7 @@ class CCPluginCompile(cocos.CCPlugin):
         indexHtmlOutputFile = open(os.path.join(publish_dir, "index.html"), "w")
         indexHtmlOutputFile.write(indexContent)
         indexHtmlOutputFile.close()
-        
+
         # copy res dir
         dst_dir = os.path.join(publish_dir, 'res')
         src_dir = os.path.join(project_dir, 'res')
@@ -1520,8 +1520,15 @@ class CCPluginCompile(cocos.CCPlugin):
                 return name, fullname
         return (None, None)
 
+    def run_hash(self):
+        cocos_cmd_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "cocos")
+        compile_cmd = "\"%s\" hash --no-pack" % (cocos_cmd_path)
+        # run compile command
+        self._run_cmd(compile_cmd)
+
     def run(self, argv, dependencies):
         self.parse_args(argv)
+        self.run_hash()
         cocos.Logging.info(MultiLanguage.get_string('COMPILE_INFO_BUILD_MODE_FMT', self._mode))
         self._update_build_cfg()
 
