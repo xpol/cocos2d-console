@@ -131,7 +131,7 @@ class CCPluginHash(cocos.CCPlugin):
 
     def encrypt(self, dir):
         cocos_cmd_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "cocos")
-        compile_cmd = "\"%s\" luacompile -s \"%s\" -d \"%s\" -e" % (cocos_cmd_path, dir, dir)
+        compile_cmd = "\"%s\" luacompile -s \"%s\" -d \"%s\" --disable-compile -e" % (cocos_cmd_path, dir, dir)
         # run compile command
         self._run_cmd(compile_cmd)
         replace_lua_with_luac(dir)
